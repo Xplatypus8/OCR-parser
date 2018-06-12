@@ -19,7 +19,7 @@ public class BusinessCardParser {
             if(updatedContact.getEmailAddress().equals("Unspecified") && verifyEmail(docLine)){
                 updatedContact.setEmailAddress(docLine);
             }
-            else if(docLine.contains("\\d+")){
+            else if(docLine.matches(".*\\d+.*")){
                 possiblePhoneNumbers.add(docLine);
             }
             else{
@@ -27,18 +27,38 @@ public class BusinessCardParser {
             }
             
         }
+        String emailUsername = getEmailUsername(updatedContact.getEmailAddress());
+        System.out.println(emailUsername);
+        parseName(possibleNames, emailUsername);
+        
         return null;
     }
+    
     private static boolean verifyEmail(String possibleEmail){
         if(possibleEmail.contains("@")){
+            
             List<String> emailTLDs = new ArrayList<String>(
                     Arrays.asList(".com", ".org", ".net", ".gov", ".edu", ".mil"));
-        return emailTLDs.contains(possibleEmail.substring(possibleEmail.length()-4, possibleEmail.length()));
+            
+            //returns true if the potential address has a valid Top Level Domain
+            return emailTLDs.contains(possibleEmail.substring(possibleEmail.length()-4, possibleEmail.length()));
         }
         
         return false;
     }
-    private static String parseName(List<String> possibleNames){
+    private static String getEmailUsername(String emailAddress) {
+        int cutIndex =0;
+        
+        for(int i = 0; i < emailAddress.length(); i++){
+            if(emailAddress.charAt(i)=='@'){
+                cutIndex = i;
+                break;
+            }
+        }
+        
+        return emailAddress.substring(0, cutIndex);
+    }
+    private static String parseName(List<String> possibleNames, String emailUsername){
         String fullName = "";
         for(String name: possibleNames){
             name.split(" ");
@@ -48,7 +68,17 @@ public class BusinessCardParser {
     
     
     public static void main(String [] args){
-        String docToParse = "";
+        //For testing purposes only
+        String docToParse = "Bob Smith"
+                + "\nSoftware Engineer"
+                + "\nDecision &amp; Security Technologies"
+                + "\nABC Technologies"
+                + "\n123 North 11th Street"
+                + "\nSuite 229"
+                + "\nArlington, VA 22209"
+                + "\nTel: +1 (703) 555-1259"
+                + "\nFax: +1 (703) 555-1200"
+                + "\nJane.doe@acmetech.com";
         ContactInfo info = getContactInfo(docToParse);
     }
 }
