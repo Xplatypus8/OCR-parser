@@ -5,20 +5,25 @@ import java.util.Scanner;
 
 public class BusinessCardParser {
     public static ContactInfo getContactInfo(String document) {
-        ContactInfo updatedContact = new ContactInfo();
+        ContactInfo newContact = new ContactInfo();
 
         List<String> possibleNames = new ArrayList<String>();
         List<String> possiblePhoneNumbers = new ArrayList<String>();
 
         Scanner scnr = new Scanner(document);
 
+        String emailUsername = "Unspecified";
+
         while (scnr.hasNextLine()) {
             String docLine = scnr.nextLine();
 
-            if (updatedContact.getEmailAddress().equals("Unspecified")
-                    && verifyEmail(docLine)) {
-                updatedContact.setEmailAddress(docLine);
+            // If an email address has not been set, and the docLine contains a valid email address.
+            if (newContact.getEmailAddress().equals("Unspecified")&& verifyEmail(docLine)) {
+                newContact.setEmailAddress(docLine);
+                // Sets emailUsername to a string of all characters before '@' in the email address.
+                emailUsername = docLine.substring(0, docLine.indexOf('@'));
             }
+            // if the docLine contains any numbers, it is a possible phonenumber.
             else if (docLine.matches(".*\\d+.*")) {
                 possiblePhoneNumbers.add(docLine);
             }
@@ -28,16 +33,12 @@ public class BusinessCardParser {
 
         }
         scnr.close();
-        
-        String emailUsername = getEmailUsername(updatedContact
-                .getEmailAddress());
 
-        updatedContact.setName(parseName(possibleNames, emailUsername));
-        
-        updatedContact.setPhoneNumber(parsePhoneNumber(possiblePhoneNumbers));
-        
-        
-        return updatedContact;
+        newContact.setName(parseName(possibleNames, emailUsername));
+
+        newContact.setPhoneNumber(parsePhoneNumber(possiblePhoneNumbers));
+
+        return newContact;
     }
 
     private static boolean verifyEmail(String possibleEmail) {
@@ -46,8 +47,8 @@ public class BusinessCardParser {
             List<String> emailTLDs = new ArrayList<String>(Arrays.asList(
                     ".com", ".org", ".net", ".gov", ".edu", ".mil"));
 
-            // returns true if the potential address has a valid Top Level
-            // Domain
+            //A valid email address must have a valid top level domain
+            
             return emailTLDs.contains(possibleEmail.substring(
                     possibleEmail.length() - 4, possibleEmail.length()));
         }
@@ -55,26 +56,13 @@ public class BusinessCardParser {
         return false;
     }
 
-    private static String getEmailUsername(String emailAddress) {
-        int cutIndex = 0;
-
-        for (int i = 0; i < emailAddress.length(); i++) {
-            if (emailAddress.charAt(i) == '@') {
-                cutIndex = i;
-                break;
-            }
-        }
-
-        return emailAddress.substring(0, cutIndex);
-    }
-
-    private static String parseName(List<String> possibleNames,
-            String emailUsername) {
+    private static String parseName(List<String> possibleNames,String emailUsername) {
         String fullName = "Unspecified";
         int maxMatches = 0;
 
         for (String name : possibleNames) {
 
+            //The full name will likely match with the email username
             int numMatches = getNumMatches(name.split(" "), emailUsername);
 
             if (numMatches > maxMatches) {
@@ -84,30 +72,36 @@ public class BusinessCardParser {
         }
         return fullName;
     }
-    private static String parsePhoneNumber(List<String> possiblePhoneNumbers){
+
+    private static String parsePhoneNumber(List<String> possiblePhoneNumbers) {
         String correctPhoneNumber = "Unspecified";
-        for(String phoneNumber: possiblePhoneNumbers){
+        for (String phoneNumber : possiblePhoneNumbers) {
+            // rawPhoneNumber is stripped to contain only numbers
             String rawPhoneNumber = phoneNumber.replaceAll("[^\\d.]", "");
-            if(rawPhoneNumber.length() >= 10){
-                if(phoneNumber.toLowerCase().contains("tel") || phoneNumber.toLowerCase().contains("phone")){
+            // A valid phone number contains at least 10 numbers.
+            if (rawPhoneNumber.length() >= 10) {
+
+                // If there is a keyword, such as "tel", then the following
+                // number is most likely the phone number
+                if (phoneNumber.toLowerCase().contains("tel")
+                        || phoneNumber.toLowerCase().contains("phone")) {
                     correctPhoneNumber = rawPhoneNumber;
                     break;
                 }
-                else if(correctPhoneNumber.equals("Unspecified")){
+                // otherwise, the phone number is likely the first 10+ digit number
+                else if (correctPhoneNumber.equals("Unspecified")) {
                     correctPhoneNumber = rawPhoneNumber;
                 }
             }
-            
+
         }
         return correctPhoneNumber;
     }
 
-    private static Integer getNumMatches(String[] possibleNames,
-            String emailUsername) {
+    private static Integer getNumMatches(String[] possibleFullNames,String emailUsername) {
         int numMatches = 0;
-        for (String nameSegment : possibleNames) {
-            if (emailUsername.toLowerCase()
-                    .contains(nameSegment.toLowerCase())) {
+        for (String name : possibleFullNames) {
+            if (emailUsername.toLowerCase().contains(name.toLowerCase())) {
                 numMatches++;
             }
         }
@@ -117,18 +111,14 @@ public class BusinessCardParser {
 
     public static void main(String[] args) {
         // For testing purposes only
-        String docToParse = "Bob Smith"
-                + "\nSoftware Engineer"
+        String docToParse = "Bob Smith" + "\nSoftware Engineer"
                 + "\nDecision &amp; Security Technologies"
-                + "\nABC Technologies"
-                + "\n123 North 11th Street"
-                + "\nSuite 229"
-                + "\nArlington, VA 22209"
-                + "\nTel: +1 (703) 555-1259"
-                + "\nFax: +1 (703) 555-1200"
+                + "\nABC Technologies" + "\n123 North 11th Street"
+                + "\nSuite 229" + "\nArlington, VA 22209"
+                + "\nTel: +1 (703) 555-1259" + "\nFax: +1 (703) 555-1200"
                 + "\nbsmith@abctech.com";
         ContactInfo info = getContactInfo(docToParse);
-        System.out.println(info.getName() + "       "+info.getPhoneNumber()+ "       "
-        + info.getEmailAddress());
+        System.out.println(info.getName() + "       " + info.getPhoneNumber()
+                + "       " + info.getEmailAddress());
     }
 }
