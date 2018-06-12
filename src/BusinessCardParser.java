@@ -33,10 +33,11 @@ public class BusinessCardParser {
                 .getEmailAddress());
 
         updatedContact.setName(parseName(possibleNames, emailUsername));
-
-        System.out.println(updatedContact.getName() + "       "
-                + updatedContact.getEmailAddress());
-        return null;
+        
+        updatedContact.setPhoneNumber(parsePhoneNumber(possiblePhoneNumbers));
+        
+        
+        return updatedContact;
     }
 
     private static boolean verifyEmail(String possibleEmail) {
@@ -83,6 +84,23 @@ public class BusinessCardParser {
         }
         return fullName;
     }
+    private static String parsePhoneNumber(List<String> possiblePhoneNumbers){
+        String correctPhoneNumber = "Unspecified";
+        for(String phoneNumber: possiblePhoneNumbers){
+            String rawPhoneNumber = phoneNumber.replaceAll("[^\\d.]", "");
+            if(rawPhoneNumber.length() >= 10){
+                if(phoneNumber.toLowerCase().contains("tel") || phoneNumber.toLowerCase().contains("phone")){
+                    correctPhoneNumber = rawPhoneNumber;
+                    break;
+                }
+                else if(correctPhoneNumber.equals("Unspecified")){
+                    correctPhoneNumber = rawPhoneNumber;
+                }
+            }
+            
+        }
+        return correctPhoneNumber;
+    }
 
     private static Integer getNumMatches(String[] possibleNames,
             String emailUsername) {
@@ -99,10 +117,18 @@ public class BusinessCardParser {
 
     public static void main(String[] args) {
         // For testing purposes only
-        String docToParse = "Acme Technologies" + "\nAnalytic Developer"
-                + "\nJane Doe" + "\n1234 Roadrunner Way"
-                + "\nColumbia, MD 12345" + "\nPhone: 410-555-1234"
-                + "\nFax: 410-555-4321" + "\nJane.doe@acmetech.com";
+        String docToParse = "Bob Smith"
+                + "\nSoftware Engineer"
+                + "\nDecision &amp; Security Technologies"
+                + "\nABC Technologies"
+                + "\n123 North 11th Street"
+                + "\nSuite 229"
+                + "\nArlington, VA 22209"
+                + "\nTel: +1 (703) 555-1259"
+                + "\nFax: +1 (703) 555-1200"
+                + "\nbsmith@abctech.com";
         ContactInfo info = getContactInfo(docToParse);
+        System.out.println(info.getName() + "       "+info.getPhoneNumber()+ "       "
+        + info.getEmailAddress());
     }
 }
