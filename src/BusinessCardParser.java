@@ -1,6 +1,8 @@
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 
@@ -28,7 +30,7 @@ public class BusinessCardParser {
             
         }
         String emailUsername = getEmailUsername(updatedContact.getEmailAddress());
-        System.out.println(emailUsername);
+        
         parseName(possibleNames, emailUsername);
         
         return null;
@@ -59,11 +61,31 @@ public class BusinessCardParser {
         return emailAddress.substring(0, cutIndex);
     }
     private static String parseName(List<String> possibleNames, String emailUsername){
-        String fullName = "";
+        String fullName = "Unspecified";
+        int maxMatches = 0;
+        Map<String [], Integer> nameMatches = new HashMap<String [], Integer>();
         for(String name: possibleNames){
-            name.split(" ");
+            String [] nameArray = name.split(" ");
+            int numMatches =getNumMatches(nameArray, emailUsername);
+            nameMatches.put(nameArray, numMatches);
+            if(numMatches>maxMatches){
+                maxMatches = numMatches;
+                fullName = name;
+            }
         }
+        System.out.println(nameMatches);
         return "";
+    }
+    
+    private static Integer getNumMatches(String [] possibleNames, String emailUsername){
+        int numMatches = 0;
+        for(String nameSegment: possibleNames){
+            if(emailUsername.toLowerCase().contains(nameSegment.toLowerCase())){
+                numMatches++;
+            }
+        }
+        return numMatches;
+        
     }
     
     
@@ -78,7 +100,7 @@ public class BusinessCardParser {
                 + "\nArlington, VA 22209"
                 + "\nTel: +1 (703) 555-1259"
                 + "\nFax: +1 (703) 555-1200"
-                + "\nJane.doe@acmetech.com";
+                + "\nbobSmith@acmetech.com";
         ContactInfo info = getContactInfo(docToParse);
     }
 }
