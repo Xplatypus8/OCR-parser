@@ -1,10 +1,32 @@
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
 public class BusinessCardParser {
-    public static ContactInfo getContactInfo(String document) {
+    
+    public static void main(String[] args){
+        File docToParse = new File("input.txt");
+        ContactInfo info = null;
+        try {
+            info = getContactInfo(docToParse);
+            PrintWriter writer = new PrintWriter("output.txt");
+            writer.println("Name: " + info.getName());
+            writer.println("Phone: " + info.getPhoneNumber());
+            writer.print("Email: " + info.getEmailAddress());
+            writer.close();
+        }
+        catch (FileNotFoundException e) {
+            System.out.println("Something went wrong! The file name you entered cannot be found."
+                    + "\nMake sure that the file is spelled correctly, and in the right place.");
+            return;
+        }
+    }
+    
+    public static ContactInfo getContactInfo(File document) throws FileNotFoundException {
         ContactInfo newContact = new ContactInfo();
 
         List<String> possibleNames = new ArrayList<String>();
@@ -35,7 +57,6 @@ public class BusinessCardParser {
         scnr.close();
 
         newContact.setName(parseName(possibleNames, emailUsername));
-
         newContact.setPhoneNumber(parsePhoneNumber(possiblePhoneNumbers));
 
         return newContact;
@@ -72,23 +93,23 @@ public class BusinessCardParser {
         }
         return fullName;
     }
-
+    
+    //Finds the correct phone number, which is likely indicated by a keyword,
+    //or is the first 10+ digit number.
     private static String parsePhoneNumber(List<String> possiblePhoneNumbers) {
         String correctPhoneNumber = "Unspecified";
         for (String phoneNumber : possiblePhoneNumbers) {
+            
             // rawPhoneNumber is stripped to contain only numbers
             String rawPhoneNumber = phoneNumber.replaceAll("[^\\d.]", "");
             // A valid phone number contains at least 10 numbers.
             if (rawPhoneNumber.length() >= 10) {
 
-                // If there is a keyword, such as "tel", then the following
-                // number is most likely the phone number
                 if (phoneNumber.toLowerCase().contains("tel")
                         || phoneNumber.toLowerCase().contains("phone")) {
                     correctPhoneNumber = rawPhoneNumber;
                     break;
                 }
-                // otherwise, the phone number is likely the first 10+ digit number
                 else if (correctPhoneNumber.equals("Unspecified")) {
                     correctPhoneNumber = rawPhoneNumber;
                 }
@@ -107,18 +128,5 @@ public class BusinessCardParser {
         }
         return numMatches;
 
-    }
-
-    public static void main(String[] args) {
-        // For testing purposes only
-        String docToParse = "Bob Smith" + "\nSoftware Engineer"
-                + "\nDecision &amp; Security Technologies"
-                + "\nABC Technologies" + "\n123 North 11th Street"
-                + "\nSuite 229" + "\nArlington, VA 22209"
-                + "\nTel: +1 (703) 555-1259" + "\nFax: +1 (703) 555-1200"
-                + "\nbsmith@abctech.com";
-        ContactInfo info = getContactInfo(docToParse);
-        System.out.println(info.getName() + "       " + info.getPhoneNumber()
-                + "       " + info.getEmailAddress());
     }
 }
